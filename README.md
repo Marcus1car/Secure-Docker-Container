@@ -16,14 +16,19 @@ Project for cybersecurity researchers, malware analysts, and security profession
 Architectural Components :
 
 
-DockerFile
+DockerFile :
+```
 Using a lightweight Ubuntu base image
 Creating a virtual environment
 Installing minimal necessary tools
+```
 
 Python Script :
+
+  ```
   analyze.py : Analyze given file using ClamAV
-  Execute.py : Safely execute a file with strict controls
+  Execute.py : Safely execute a file with strict controls / LOGGING
+  ```
         
         Key Safety Features:
         - Unique execution context for each file
