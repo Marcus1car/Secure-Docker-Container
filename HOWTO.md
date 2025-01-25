@@ -4,7 +4,7 @@
 
 
 Execute.py : 
-  custimizable CPU time 
+  Configurable CPU time 
   ```
   # Run with default settings
 python execute.py /path/to/file
