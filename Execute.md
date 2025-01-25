@@ -10,7 +10,7 @@ python execute.py /path/to/file --cpu-limit 5
   Default memory limit: 256 MB
 
   Logging : 
-    -creates ```execution.log``` file in logs dir
-    -Configures log format with timestamp, logger name, log level
+    creates ```execution.log``` file in logs dir
+    Configures log format with timestamp, logger name, log level
 
     
