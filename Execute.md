@@ -11,7 +11,7 @@ python execute.py /path/to/file --cpu-limit 5
 
   Logging:
   - Creates `execution.log` file in the `logs` directory.
-  - Configures log format with timestamp, logger name, log level
+  - Configures log format with timestamp, logger name, log level , message
 
   Executable files:
 
