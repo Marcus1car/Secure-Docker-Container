@@ -10,8 +10,8 @@ ClamAV Virus Scanning :
   - Logs analysis errors
 
 Usage :
- '''
+ ```
   #Exemple 
   python analyze.py <file_path>
- '''
+ ```
   
