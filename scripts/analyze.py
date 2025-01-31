@@ -24,7 +24,7 @@ class FileAnalyzer:
 
        # Initialize ClamAV scanner
         try:
-            self.cd = pyclamd.ClamdUnixSocket()
+            self.cd = pyclamd.ClamdUnixSocket(socket='/tmp/clamd.sock')  # Added socket path
             if not self.cd.ping():
                 self.logger.error("ClamAV daemon is not running")
         except Exception as e:

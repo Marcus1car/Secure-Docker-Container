@@ -35,24 +35,12 @@ class SafeExecutor:
         self.logger.addHandler(file_handler)
         self.logger.setLevel(logging.INFO)
     
-    def _set_resource_limits(self):
-        """Set resource constraints for the process"""
-        resource.setrlimit(resource.RLIMIT_AS, (self.memory_limit, self.memory_limit))
-        
-        if self.cpu_time_limit is not None:
-            resource.setrlimit(resource.RLIMIT_CPU, (self.cpu_time_limit, self.cpu_time_limit))
-
-    def execute_file(self, 
-                     file_path: str, 
-                     args: Optional[List[str]] = None
-                     ) -> dict:
+    def execute_file(self, file_path: str, args: Optional[List[str]] = None) -> dict:
         """Safely execute a file with strict controls"""
-        # Validate file
         if not os.path.isfile(file_path):
             self.logger.error(f"File not found: {file_path}")
             return {"error": "File not found"}
 
-        # Prepare execution context
         args = args or []
         full_command = [file_path] + args
 
@@ -61,22 +49,11 @@ class SafeExecutor:
         log_output = os.path.join(self.log_dir, 'execution_output.txt')
 
         try:
-            # Execute with firejail for additional isolation
-            firejail_cmd = [
-                'firejail', 
-                '--quiet', 
-                '--net=none',  # Disable network
-                '--caps.drop=all',  # Drop all capabilities
-                '--nonewprivs',  # Prevent gaining new privileges
-                f'--output={log_output}',  # Redirect output
-                *full_command
-            ]
-
-            # Execute process
+            # Execute process directly with resource limits
             process = subprocess.Popen(
-                firejail_cmd, 
+                full_command,
                 preexec_fn=self._set_resource_limits,
-                stdout=subprocess.PIPE, 
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
             )
