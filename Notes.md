@@ -43,3 +43,19 @@ USER fileanalyst
 # Default command (can be overridden)
 CMD ["/bin/bash"]
 ```
+
+
+
+```
+docker run --rm \
+  -v $(pwd)/logs:/app/Secure-Docker-Container/logs \
+  -v $(pwd)/samples:/app/Secure-Docker-Container/samples:ro \
+  secure-container python3 analyze.py /app/Secure-Docker-Container/samples/safe.txt
+```
+
+```
+docker run --rm \
+  -v $(pwd)/logs:/app/Secure-Docker-Container/logs \
+  -v $(pwd)/samples:/app/Secure-Docker-Container/samples:ro \
+  secure-container python3 scripts/analyze.py samples/safe.txt
+```

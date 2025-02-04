@@ -1,0 +1,108 @@
+2025-02-02 16:25:18,133 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:25:18,141 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:25:18,142 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/safe.txt",
+  "file_size": 15,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 16:29:59,395 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:29:59,403 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:29:59,404 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/safe.txt",
+  "file_size": 15,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 16:31:00,852 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:31:00,859 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:31:00,860 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 16:31:09,620 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:31:09,628 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:31:09,628 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 16:34:12,030 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:34:12,031 - __main__ - ERROR - File not found: /app/Secure-Docker-Container/samples/eicar.com*
+2025-02-02 16:34:14,160 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:34:14,161 - __main__ - ERROR - File not found: /app/Secure-Docker-Container/samples/eicar.com*
+2025-02-02 16:34:17,551 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:34:17,559 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:34:17,560 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 16:59:15,634 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 16:59:15,662 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 16:59:15,663 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 17:00:07,019 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 17:00:07,027 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 17:00:07,028 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 17:00:29,531 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 17:00:29,540 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 17:00:29,541 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 17:41:26,029 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 17:41:26,037 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 17:41:26,037 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 17:45:59,067 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 17:45:59,070 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 17:45:59,071 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-02 17:52:00,601 - __main__ - ERROR - ClamAV initialization error: ClamdUnixSocket.__init__() got an unexpected keyword argument 'socket'
+2025-02-02 17:52:00,611 - __main__ - WARNING - ClamAV not initialized
+2025-02-02 17:52:00,611 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-03 09:58:27,543 - __main__ - ERROR - ClamAV initialization error: Could not reach clamd using unix socket (/var/run/clamav/clamd.sock)
+2025-02-03 09:58:27,548 - __main__ - WARNING - ClamAV not initialized
+2025-02-03 09:58:27,548 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-03 10:00:38,599 - __main__ - ERROR - ClamAV initialization error: Could not reach clamd using unix socket (/var/run/clamav/clamd.sock)
+2025-02-03 10:00:38,603 - __main__ - WARNING - ClamAV not initialized
+2025-02-03 10:00:38,603 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
