@@ -106,3 +106,27 @@
   "file_type": "text/plain",
   "clamav_result": null
 }
+2025-02-13 16:29:18,096 - __main__ - ERROR - ClamAV initialization error: Could not reach clamd using unix socket (/var/run/clamav/clamd.sock)
+2025-02-13 16:29:18,107 - __main__ - WARNING - ClamAV not initialized
+2025-02-13 16:29:18,107 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-13 22:11:47,473 - __main__ - ERROR - ClamAV initialization error: Could not reach clamd using unix socket (/var/run/clamav/clamd.sock)
+2025-02-13 22:11:47,477 - __main__ - WARNING - ClamAV not initialized
+2025-02-13 22:11:47,477 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}
+2025-02-13 22:16:07,122 - __main__ - ERROR - ClamAV initialization error: Could not reach clamd using unix socket (/var/run/clamav/clamd.sock)
+2025-02-13 22:16:07,126 - __main__ - WARNING - ClamAV not initialized
+2025-02-13 22:16:07,126 - __main__ - INFO - File analyzed: {
+  "file_path": "/app/Secure-Docker-Container/samples/eicar.com",
+  "file_size": 68,
+  "file_type": "text/plain",
+  "clamav_result": null
+}

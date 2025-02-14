@@ -1,4 +1,4 @@
-cp of old dockerfile 
+*cp of old dockerfile*
 ```
 # Use a lightweight base image
 FROM ubuntu:22.04
@@ -58,4 +58,55 @@ docker run --rm \
   -v $(pwd)/logs:/app/Secure-Docker-Container/logs \
   -v $(pwd)/samples:/app/Secure-Docker-Container/samples:ro \
   secure-container python3 scripts/analyze.py samples/safe.txt
+```
+
+
+alright done now i need to test it , can you give me test files , their respective expected output and the command to dot it
+
+
+
+**Ensured ClamAV configuration is properly set with minimal duplication. in the Dockerfile**
+
+**freshclam should run as fileanalyst instead of root in entrypoint.sh**
+
+
+
+
+
+*old entrypoint*`
+```
+#!/bin/sh
+set -ex
+
+if [ "$(id -u)" = "0" ]; then
+  # Update virus databases first
+  echo "Updating definitions..."
+  freshclam
+
+  # Start ClamAV daemon in background
+  echo "Starting ClamAV..."
+  clamd &
+
+  # Wait for socket creation with timeout
+  echo "Waiting for socket..."
+  timeout=10
+  while [ ! -S /var/run/clamav/clamd.sock ] && [ $timeout -gt 0 ]; do
+    sleep 1
+    ((timeout--))
+  done
+
+  if [ ! -S /var/run/clamav/clamd.sock ]; then
+    echo "ERROR: ClamAV socket not created after 10 seconds!"
+    exit 1
+  fi
+
+  # Set permissions
+  chown fileanalyst:fileanalyst /var/run/clamav/clamd.sock
+  chmod 660 /var/run/clamav/clamd.sock
+
+  # Drop privileges and execute command
+  exec gosu fileanalyst "$@"
+fi
+
+exec "$@"
 ```
