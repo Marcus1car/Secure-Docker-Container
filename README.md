@@ -42,4 +42,4 @@ Installing minimal necessary tools
 **Run commands**
 
 `docker build -t file-analyzer .`  
-`docker run -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" file-analyzer python3 analyze.py /path/to/sample`
+`docker run -v "$(pwd)/yara-rules:/app/yara-rules"            -v "$(pwd)/samples:/app/Secure-Docker-Container/samples"  file-analyzer python3 analyze.py /app/Secure-Docker-Container/samples/samplefile`

@@ -3,45 +3,64 @@
 # Use a lightweight base image
 FROM ubuntu:22.04
 
-
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set workdir
-WORKDIR /app
+# Create directory structure
+RUN mkdir -p \
+    /app/Secure-Docker-Container/logs \
+    /app/Secure-Docker-Container/samples \
+    /app/Secure-Docker-Container/scripts \
+    /app/yara-rules
 
-# Install essential security and analysis tools
-RUN apt-get update && apt-get install -y \  
-    python3 \
+# Set workdir for subsequent commands
+WORKDIR /app/Secure-Docker-Container/scripts
+
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3-minimal \
     python3-pip \
-    clamav \
-    firejail \
+    libmagic1 \
+    yara\
+    gosu \
+    netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 
 
-# Update ClamAV virus definitions
-RUN freshclam
+# Create non-root user and set ownership
+RUN groupadd -g 10001 fileanalyst && \
+    useradd -u 10001 -g fileanalyst -s /bin/bash -m -d /home/fileanalyst fileanalyst && \
+    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container /app/yara-rules
+
+COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
+COPY yara-rules /app/yara-rules
+
+# Set file permissions AFTER ownership change
+RUN chmod 750 *.py && \
+    chmod 770 /app/Secure-Docker-Container/logs
+
+RUN chmod 755 /app /app/Secure-Docker-Container && \
+    chmod 755 /app/Secure-Docker-Container/scripts
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy scripts
-COPY scripts/analyze.py .
-COPY scripts/execute.py .
+# Copy and prepare entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Additional security hardening
-RUN adduser --disabled-password --gecos '' fileanalyst \
-    && chown -R fileanalyst:fileanalyst /app
+# Security hardening
+RUN echo "kernel.unprivileged_userns_clone=0" >> /etc/sysctl.d/10-security.conf && \
+    echo "kernel.core_pattern=|/bin/false" >> /etc/sysctl.d/10-security.conf
 
-# Create a non-root user for enhanced security
-RUN useradd -m fileanalyst
+# Final container configuration
 USER fileanalyst
-
-# Default command (can be overridden)
-CMD ["/bin/bash"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python3", "analyze.py"]
 ```
 
 
@@ -110,3 +129,14 @@ fi
 
 exec "$@"
 ```
+
+
+
+
+
+
+***COMMAND***
+
+docker build -t file-analyzer .
+
+docker run -v "$(pwd)/yara-rules:/app/yara-rules"            -v "$(pwd)/samples:/app/Secure-Docker-Container/samples"  file-analyzer python3 analyze.py /app/Secure-Docker-Container/samples/clean.txt

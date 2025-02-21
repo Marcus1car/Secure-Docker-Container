@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import magic
-import pyclamd
+import yara
 import json
 from typing import Dict, Any
 
@@ -17,18 +17,8 @@ class FileAnalyzer:
             filemode='a'  # Append mode to allow multiple script logs
         )
         self.logger = logging.getLogger(__name__)
+        self.yara_rules = self._load_yara_rules()
 
-        # Initialize ClamAV scanner with debug information
-        # analyze.py (corrected)
-        try:
-            self.cd = pyclamd.ClamdUnixSocket('/var/run/clamav/clamd.sock')  # Remove 'socket=' keyword
-            connection_status = self.cd.ping()
-            self.logger.info(f"ClamAV connection status: {connection_status}")
-            socket_exists = os.path.exists('/var/run/clamav/clamd.sock')
-            self.logger.info(f"Socket exists: {socket_exists}")
-        except Exception as e:
-            self.logger.error(f"ClamAV initialization error: {e}")
-            self.cd = None
     def get_file_type(self, file_path: str) -> str:
         """
         Detect file type using python-magic.
@@ -40,19 +30,32 @@ class FileAnalyzer:
             self.logger.error(f"File type detection error: {e}")
             return "Unknown"
 
-    def scan_with_clamav(self, file_path: str) -> Any:
-        """
-        Scan the file with ClamAV.
-        """
-        if not self.cd:
-            self.logger.warning("ClamAV not initialized")
+    def _load_yara_rules(self):
+        try:
+            # Load all YARA rules from directory
+            rules = yara.compile('/app/yara-rules/index.yar')
+            self.logger.info("YARA rules loaded successfully")
+            return rules
+        except yara.Error as e:
+            self.logger.error(f"YARA rule loading error: {e}")
             return None
 
+    def scan_with_yara(self, file_path: str) -> dict:
+        """
+        Scan the file with YARA rules
+        """
+        if not self.yara_rules:
+            return {"error": "YARA rules not loaded"}
+            
         try:
-            return self.cd.scan_file(file_path)
+            matches = self.yara_rules.match(file_path)
+            return {
+                "malicious": len(matches) > 0,
+                "matches": [str(m) for m in matches]
+            }
         except Exception as e:
-            self.logger.error(f"ClamAV scan error: {e}")
-            return None
+            self.logger.error(f"YARA scan error: {e}")
+            return {"error": str(e)}
 
     def analyze_file(self, file_path: str) -> Dict[str, Any]:
         """
@@ -68,7 +71,7 @@ class FileAnalyzer:
             "file_path": file_path,
             "file_size": os.path.getsize(file_path),
             "file_type": self.get_file_type(file_path),
-            "clamav_result": self.scan_with_clamav(file_path)
+            "yara_result": self.scan_with_yara(file_path)
         }
 
         # Log the analysis result
