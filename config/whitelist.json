@@ -1,0 +1,9 @@
+{
+    "allowed_mime_types": [
+        "text/plain",
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ]
+}
