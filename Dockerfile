@@ -9,6 +9,7 @@ RUN mkdir -p \
     /app/Secure-Docker-Container/logs \
     /app/Secure-Docker-Container/samples \
     /app/Secure-Docker-Container/scripts \
+    /app/Secure-Docker-Container/config \
     /app/yara-rules
 
 # Set workdir for subsequent commands
@@ -33,6 +34,7 @@ RUN groupadd -g 10001 fileanalyst && \
 # Copy application files with correct ownership
 COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
 COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules
+COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Container/config/
 
 # Set directory permissions
 RUN chmod 755 /app /app/Secure-Docker-Container && \

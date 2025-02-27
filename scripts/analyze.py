@@ -5,6 +5,7 @@ import magic
 import yara
 import json
 from typing import Dict, Any
+from pathlib import Path
 
 
 class FileAnalyzer:
@@ -18,7 +19,18 @@ class FileAnalyzer:
         )
         self.logger = logging.getLogger(__name__)
         self.yara_rules = self._load_yara_rules()
+        self.whitelist = self._load_whitelist()
 
+    def _load_whitelist(self) -> list:
+        config_path = Path('/app/Secure-Docker-Container/config/whitelist.json')
+        try:
+            with open(config_path) as f:
+                return json.load(f)['allowed_mime_types']
+        except Exception as e:
+            self.logger.error(f"Whitelist loading error: {e}")
+            return []
+    
+    
     def get_file_type(self, file_path: str) -> str:
         """
         Detect file type using python-magic.
@@ -65,19 +77,32 @@ class FileAnalyzer:
         if not os.path.isfile(file_path):
             self.logger.error(f"File not found: {file_path}")
             return {"error": "File not found"}
+        
+        file_type = self.get_file_type(file_path)
+        is_whitelisted = file_type in self.whitelist
 
+        
         # Gather file details
         analysis_result = {
             "file_path": file_path,
             "file_size": os.path.getsize(file_path),
             "file_type": self.get_file_type(file_path),
+            "whitelist_status": "allowed" if is_whitelisted else "blocked",
             "yara_result": self.scan_with_yara(file_path)
         }
-
+        
+        analysis_result["threat_level"] = self._assess_threat(analysis_result)
         # Log the analysis result
         self.logger.info(f"File analyzed: {json.dumps(analysis_result, indent=2)}")
 
         return analysis_result
+
+    def _assess_threat(self, result: dict) -> str:
+        if result["whitelist_status"] == "blocked":
+            return "high"
+        if result["yara_result"]["malicious"]:
+            return "medium"
+        return "low"
 
 
 def main():
