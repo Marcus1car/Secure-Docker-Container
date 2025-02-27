@@ -15,6 +15,8 @@ RUN mkdir -p \
 # Set workdir for subsequent commands
 WORKDIR /app/Secure-Docker-Container 
 
+
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3-minimal \
@@ -41,6 +43,7 @@ RUN chmod 755 /app /app/Secure-Docker-Container && \
     chmod 755 /app/Secure-Docker-Container/scripts && \
     chmod 750 *.py && \
     chmod 770 /app/Secure-Docker-Container/logs
+
 
 # Install Python dependencies
 COPY requirements.txt .
