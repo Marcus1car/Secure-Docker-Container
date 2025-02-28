@@ -5,23 +5,21 @@ import resource
 import time
 import logging
 import json
+import signal
 from typing import List, Optional
 
 class SafeExecutor:
     def __init__(self, 
                  log_dir: str = '/app/Secure-Docker-Container/logs', 
-                 max_execution_time: int = 60,
-                 memory_limit: int = 256 * 1024 * 1024,
-                 cpu_time_limit: Optional[int] = None):
+                 max_execution_time: int = 5,  #edited for testing
+                 memory_limit: int = 64 * 1024 * 1024,#edited for testing
+                 cpu_time_limit: Optional[int] = 2):#edited for testing
         """Initialize SafeExecutor with configurable execution parameters"""
         self.log_dir = os.path.abspath(log_dir)
         self.max_execution_time = max_execution_time
         self.memory_limit = memory_limit
         self.cpu_time_limit = cpu_time_limit
-
-        # Ensure log directory exists
         os.makedirs(self.log_dir, exist_ok=True)
-        
         # Configure logging
         self.logger = logging.getLogger('SafeExecutor')
         self._setup_logging()
@@ -34,6 +32,28 @@ class SafeExecutor:
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
         self.logger.setLevel(logging.INFO)
+        
+    
+    def _set_resource_limits(self):
+        """Set resource limits for executed process"""
+        # Memory limit (RLIMIT_AS = address space limit)
+        resource.setrlimit(resource.RLIMIT_AS, (self.memory_limit, self.memory_limit))
+        
+        # CPU time limit (seconds)
+        if self.cpu_time_limit:
+            resource.setrlimit(resource.RLIMIT_CPU,(self.cpu_time_limit, self.cpu_time_limit))
+        
+        # Additional limits (optional)
+        resource.setrlimit(resource.RLIMIT_FSIZE, (1024 * 1024,1024 * 1024))  # 100MB file size ,edited for testing
+        resource.setrlimit(resource.RLIMIT_NPROC, (5,5))  # Max 50 processes  ,edited for testing
+    
+    def _check_resource_violation(self, process: subprocess.Popen) -> str:
+        """Determine which resource limit was hit"""
+        if process.returncode == -signal.SIGXCPU:
+            return "CPU time limit exceeded"
+        if process.returncode == -signal.SIGKILL:
+            return "Memory limit exceeded"
+        return "No resource violation detected"
     
     def execute_file(self, file_path: str, args: Optional[List[str]] = None) -> dict:
         """Safely execute a file with strict controls"""
@@ -44,10 +64,6 @@ class SafeExecutor:
         args = args or []
         full_command = [file_path] + args
 
-        # Logging preparation
-        start_time = time.time()
-        log_output = os.path.join(self.log_dir, 'execution_output.txt')
-
         try:
             # Execute process directly with resource limits
             process = subprocess.Popen(
@@ -55,25 +71,30 @@ class SafeExecutor:
                 preexec_fn=self._set_resource_limits,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
+                start_new_session=True  
             )
 
-            # Wait with timeout
+            start_time = time.time()
+            timed_out = False 
             try:
                 stdout, stderr = process.communicate(timeout=self.max_execution_time)
             except subprocess.TimeoutExpired:
-                process.kill()
-                stdout, stderr = process.communicate()
-                self.logger.warning("Execution timed out")
-
-            # Compile execution results
-            execution_time = time.time() - start_time
+                os.killpg(os.getpid() , signal.SIGKILL)
+                try: 
+                    stdout , stderr = process.communicate(timeout=1)
+                except subprocess.TimeoutExpired:
+                    os.killpg(os.getpid() , signal.SIGKILL)
+                    stdout, stderr = process.communicate()
+                    timed_out = True
+            
             return {
                 "exit_code": process.returncode,
-                "stdout": stdout,
-                "stderr": stderr,
-                "execution_time": execution_time,
-                "log_file": log_output
+                "stdout": stdout.strip(),
+                "stderr": stderr.strip(),
+                "execution_time": time.time() - start_time,
+                "timed_out " : timed_out,
+                "resource_violation" : self._check_resource_violation(process) 
             }
 
         except Exception as e:

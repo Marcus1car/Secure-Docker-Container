@@ -84,11 +84,6 @@ alright done now i need to test it , can you give me test files , their respecti
 
 
 
-**Ensured ClamAV configuration is properly set with minimal duplication. in the Dockerfile**
-
-**freshclam should run as fileanalyst instead of root in entrypoint.sh**
-
-
 
 
 
@@ -129,20 +124,6 @@ fi
 
 exec "$@"
 ```
-
-
-
-
-
-
-***COMMAND***
-
-docker build -t file-analyzer .
-
-docker run -v "$(pwd)/yara-rules:/app/yara-rules" \
-           -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" \
-           -v "$(pwd)/logs:/app/Secure-Docker-Container/logs" \
-           file-analyzer python3 analyze.py /app/Secure-Docker-Container/samples/clean.txt
 
 
 
@@ -278,3 +259,183 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+***COMMAND***
+
+docker build -t file-analyzer .
+
+docker run -v "$(pwd)/yara-rules:/app/yara-rules" \
+           -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" \
+           -v "$(pwd)/logs:/app/Secure-Docker-Container/logs" \
+           file-analyzer python3 analyze.py /app/Secure-Docker-Container/samples/clean.txt  
+
+
+
+***TODO***
+1. add docker compose to help with commands
+  - analysis with logging , and without
+
+
+
+
+
+
+
+
+
+
+Let's fix the resource limitation enforcement and handle the infinite loop scenario properly. Here's the step-by-step solution:
+
+**1. Enhanced execute.py Implementation:**
+```python
+import os
+import sys
+import subprocess
+import resource
+import time
+import logging
+import json
+import signal
+from typing import List, Optional
+
+class SafeExecutor:
+    def __init__(self, 
+                 log_dir: str = '/app/Secure-Docker-Container/logs', 
+                 max_execution_time: int = 5,  # Reduced for testing
+                 memory_limit: int = 64 * 1024 * 1024,  # 64MB for testing
+                 cpu_time_limit: int = 2):  # Default CPU limit
+        self.log_dir = os.path.abspath(log_dir)
+        self.max_execution_time = max_execution_time
+        self.memory_limit = memory_limit
+        self.cpu_time_limit = cpu_time_limit
+        os.makedirs(self.log_dir, exist_ok=True)
+        self.logger = logging.getLogger('SafeExecutor')
+        self._setup_logging()
+
+    def _set_resource_limits(self):
+        """Enforce strict resource limits"""
+        # Set memory limit (RLIMIT_AS = virtual memory space)
+        resource.setrlimit(resource.RLIMIT_AS, 
+                          (self.memory_limit, self.memory_limit))
+        
+        # Set CPU time limit (soft, hard)
+        resource.setrlimit(resource.RLIMIT_CPU,
+                          (self.cpu_time_limit, self.cpu_time_limit + 1))
+        
+        # Additional security limits
+        resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))  # No file writing
+        resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))  # No new processes
+
+    def execute_file(self, file_path: str, args: Optional[List[str]] = None) -> dict:
+        """Execute with enhanced timeout handling"""
+        try:
+            process = subprocess.Popen(
+                [file_path] + (args or []),
+                preexec_fn=self._set_resource_limits,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=True  # Required for proper signal handling
+            )
+            
+            start_time = time.time()
+            timed_out = False
+
+            try:
+                stdout, stderr = process.communicate(timeout=self.max_execution_time)
+            except subprocess.TimeoutExpired:
+                # Send SIGTERM first for graceful shutdown
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                try:
+                    stdout, stderr = process.communicate(timeout=1)
+                except subprocess.TimeoutExpired:
+                    # Force kill if still running
+                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                    stdout, stderr = process.communicate()
+                    timed_out = True
+
+            return {
+                "exit_code": process.returncode,
+                "stdout": stdout.strip(),
+                "stderr": stderr.strip(),
+                "execution_time": time.time() - start_time,
+                "timed_out": timed_out,
+                "resource_violation": self._check_resource_violation(process)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Execution failed: {e}")
+            return {"error": str(e)}
+
+    def _check_resource_violation(self, process: subprocess.Popen) -> str:
+        """Determine which resource limit was hit"""
+        if process.returncode == -signal.SIGXCPU:
+            return "CPU time limit exceeded"
+        if process.returncode == -signal.SIGKILL:
+            return "Memory limit exceeded"
+        return "No resource violation detected"
+```
+
+**2. Modified Malicious Script (samples/malicious_script.sh):**
+```bash
+#!/bin/sh
+# Consume CPU and memory aggressively
+dd if=/dev/urandom | bzip2 -9 >> /dev/null
+```
+
+**3. Test Execution:**
+```bash
+# Build fresh container
+docker build -t file-analyzer .
+
+# Test with safe script (should complete normally)
+docker run --rm -it \
+  -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" \
+  file-analyzer python3 execute.py samples/safe_script.sh
+
+# Test with malicious script (should be terminated)
+docker run --rm -it \
+  -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" \
+  file-analyzer python3 execute.py samples/malicious_script.sh
+```
+
+**Key Improvements:**
+1. **Strict Resource Limits**:
+   - 64MB memory limit (easy to trigger)
+   - 2 second CPU time limit
+   - No file writing allowed
+   - No new processes allowed
+
+2. **Enhanced Signal Handling**:
+   - Uses process groups for proper signal propagation
+   - SIGTERM grace period before SIGKILL
+   - Timeout handling separate from resource limits
+
+3. **Diagnostic Feedback**:
+   - Clear resource violation detection
+   - Timeout vs resource limit differentiation
+   - Process return code analysis
+
+**Expected Malicious Script Output:**
+```json
+{
+  "exit_code": -9,
+  "stdout": "",
+  "stderr": "",
+  "execution_time": 2.15,
+  "timed_out": true,
+  "resource_violation": "Memory limit exceeded"
+}
+```
+
+This implementation now properly:
+- Enforces both wall-clock timeouts and resource limits
+- Handles stubborn processes that ignore initial termination signals
+- Provides clear diagnostics about why execution was terminated
+- Uses secure defaults for production scenarios
+
+Remember to make your test scripts actually violate the limits you set. The new malicious script combines CPU and memory pressure to ensure limits are triggered quickly.

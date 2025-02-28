@@ -1,3 +1,3 @@
 #!/bin/sh
-# Memory exhaustion attempt
-dd if=/dev/urandom of=/dev/null
+# Consume CPU and memory aggressively
+dd if=/dev/urandom | bzip2 -9 >> /dev/null
