@@ -82,4 +82,10 @@ docker-compose run --rm analyze \
   -v ./custom_whitelist.json:/app/Secure-Docker-Container/config/whitelist.json \
   python3 analyze.py samples/document.pdf
 ```
-
+**YARA Rules**      
+Edit the YARA rules in `yara-rules/` or mount custom rules:
+```
+docker-compose run --rm analyze \
+  -v ./custom_rules:/app/yara-rules \
+  python3 analyze.py samples/malware.exe
+```
