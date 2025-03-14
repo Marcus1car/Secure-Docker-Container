@@ -4,11 +4,7 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![YARA](https://img.shields.io/badge/YARA-220000?style=for-the-badge)
 
-
-
-**Project Overview :**  
 A secure, isolated environment for analyzing and executing potentially malicious files with strict resource controls.
-
 
 ## Key Features 🔒
 - **YARA-Based Analysis**: Comprehensive file scanning using custom YARA rules
@@ -21,9 +17,21 @@ A secure, isolated environment for analyzing and executing potentially malicious
 - **Comprehensive Logging**: Detailed execution and analysis records
 - **Security Hardened**: Non-root execution, kernel hardening
 
-
-Project for cybersecurity researchers, malware analysts, and security professionals who need a controlled, isolated space to examine potentially harmful software.
-Architectural Components :
+## Architecture 🏗 
+```
+.
+├── Dockerfile
+├── docker-compose.yml
+├── config/
+│ ├── execution_limits.json
+│ └── whitelist.json
+├── scripts/
+│ ├── analyze.py
+│ └── execute.py
+├── yara-rules/
+│ └── custom_rules.yar
+└── samples/
+```
 
 
 **DockerFile :**
