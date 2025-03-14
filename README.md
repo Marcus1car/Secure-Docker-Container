@@ -47,16 +47,21 @@ Installing minimal necessary tools
   analyze.py : Analyze given file using ClamAV
   Execute.py : Safely execute a file with strict controls / LOGGING
   ```
-        
-        Key Safety Features:
-        - Unique execution context for each file
-        - Time-limited execution
-        - Resource constraints
-        - Isolated environment
 
 
 
-**Run commands**
+
+## Quick Start 
+
+###1. Build your container 
+`docker-compose build`
+
+###2. Static  File Analysis
+`docker-compose run --rm analyze python3 analyze.py samples/suspicious_file`
+###3. Execute a File Safely 
+`docker-compose run --rm execute python3 execute.py samples/test_script.sh`
+
+
 
 `docker build -t file-analyzer .`  
 `docker run -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" file-analyzer python3 analyze.py /path/to/sample`
