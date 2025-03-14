@@ -33,24 +33,6 @@ A secure, isolated environment for analyzing and executing potentially malicious
 └── samples/
 ```
 
-
-**DockerFile :**
-```
-Using a lightweight Ubuntu base image
-Creating a virtual environment
-Installing minimal necessary tools
-```
-
-**Python Script :**
-
-  ```
-  analyze.py : Analyze given file using ClamAV
-  Execute.py : Safely execute a file with strict controls / LOGGING
-  ```
-
-
-
-
 ## Quick Start 
 
 **1. Build your container**     
@@ -62,7 +44,42 @@ Installing minimal necessary tools
 **3. Execute a File Safely**      
 `docker-compose run --rm execute python3 execute.py samples/test_script.sh`
 
+## Configuration and Usage 🔧 
+**Execution Limits** 
+Edit `config/execution_limits.json` to adjust resource constraints.
+By default :
+```
+{
+  "memory_limit": 67108864,    // 64MB
+  "cpu_time_limit": 30,        // CPU seconds
+  "file_size_limit": 10485760, // 10MB
+  "process_limit": 5,          // Max concurrent processes
+  "max_execution_time": 5      // Wall-clock seconds
+}
+```
 
+Run with custom limits config : 
+```
+docker-compose run --rm execute \
+  -v ./custom_config:/app/Secure-Docker-Container/config \
+  python3 execute.py samples/script.sh
+```
 
-`docker build -t file-analyzer .`  
-`docker run -v "$(pwd)/samples:/app/Secure-Docker-Container/samples" file-analyzer python3 analyze.py /path/to/sample`
+**File Whitelisting** 
+Edit `config/whitelist.json` to define allowed file types.
+```
+{
+  "allowed_mime_types": [
+    "text/plain",
+    "application/pdf",
+    "image/jpeg"
+  ]
+}
+```
+Run with custom whitelist : 
+```
+docker-compose run --rm analyze \
+  -v ./custom_whitelist.json:/app/Secure-Docker-Container/config/whitelist.json \
+  python3 analyze.py samples/document.pdf
+```
+
