@@ -65,7 +65,8 @@ docker-compose run --rm execute \
   python3 execute.py samples/script.sh
 ```
 
-**File Whitelisting** 
+**File Whitelisting**     
+
 Edit `config/whitelist.json` to define allowed file types.
 ```
 {
