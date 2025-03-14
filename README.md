@@ -53,12 +53,13 @@ Installing minimal necessary tools
 
 ## Quick Start 
 
-** 1. Build your container **     
-`docker-compose build`
+**1. Build your container**     
+`docker-compose build`     
 
-** 2. Static  File Analysis **     
-`docker-compose run --rm analyze python3 analyze.py samples/suspicious_file`
-** 3. Execute a File Safely **      
+**2. Static  File Analysis**     
+`docker-compose run --rm analyze python3 analyze.py samples/suspicious_file`     
+
+**3. Execute a File Safely**      
 `docker-compose run --rm execute python3 execute.py samples/test_script.sh`
 
 
