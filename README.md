@@ -1,16 +1,25 @@
-# Secure-Docker-Container
+# Secure Docker Container for File Analysis & Execution  
+
+![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![YARA](https://img.shields.io/badge/YARA-220000?style=for-the-badge)
+
+
+
 **Project Overview :**  
-Secure Docker Container for File Analysis and Execution 
+A secure, isolated environment for analyzing and executing potentially malicious files with strict resource controls.
 
 
-  Goal: A portable Docker-based environment for analyzing suspicious files and     
-  executables.
-  Features:
-  File scanning and execution.
-  Logging system for activity monitoring.
-  Debug Mode for user 
-  Network isolation for executables.
-  Easy setup via docker build and docker run.
+## Key Features 🔒
+- **YARA-Based Analysis**: Comprehensive file scanning using custom YARA rules
+- **Safe Execution Sandbox**: 
+  - Resource limits (CPU/Memory/Processes)
+  - Time-constrained execution
+  - Network isolation
+  - Filesystem restrictions
+- **Whitelisting System**: MIME-type based file approval
+- **Comprehensive Logging**: Detailed execution and analysis records
+- **Security Hardened**: Non-root execution, kernel hardening
 
 
 Project for cybersecurity researchers, malware analysts, and security professionals who need a controlled, isolated space to examine potentially harmful software.
