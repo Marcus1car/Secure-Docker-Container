@@ -89,3 +89,10 @@ docker-compose run --rm analyze \
   -v ./custom_rules:/app/yara-rules \
   python3 analyze.py samples/malware.exe
 ```
+**Log Inspection**      
+View execution and analysis logs:    
+```
+docker-compose run --rm analyze cat /app/Secure-Docker-Container/logs/execution.log
+docker-compose run --rm analyze cat /app/Secure-Docker-Container/logs/file_analysis.log
+```
+ 
