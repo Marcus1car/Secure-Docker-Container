@@ -45,7 +45,7 @@ A secure, isolated environment for analyzing and executing potentially malicious
 `docker-compose run --rm execute python3 execute.py samples/test_script.sh`
 
 ## Configuration and Usage 🔧 
-**Execution Limits** 
+**Execution Limits**      
 Edit `config/execution_limits.json` to adjust resource constraints.
 By default :
 ```
@@ -66,7 +66,6 @@ docker-compose run --rm execute \
 ```
 
 **File Whitelisting**     
-
 Edit `config/whitelist.json` to define allowed file types.
 ```
 {
