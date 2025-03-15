@@ -1,0 +1,30 @@
+
+
+services:
+  secure-container:
+    build: .
+    image: file-analyzer:latest
+    environment:
+      - TZ=UTC
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      - ./samples:/app/Secure-Docker-Container/samples
+      - ./config:/app/Secure-Docker-Container/config
+      - ./logs:/app/Secure-Docker-Container/logs
+      - ./yara-rules:/app/yara-rules
+    user: "10001"
+    network_mode: "none"  # Disable network access by default
+
+  analyze:
+    image: file-analyzer:latest
+    profiles: ["analyze"]
+    command: ["python3", "analyze.py", "/app/Secure-Docker-Container/samples/"]
+    depends_on:
+      - secure-container
+
+  execute:
+    image: file-analyzer:latest
+    profiles: ["execute"]
+    command: ["python3", "execute.py", "/app/Secure-Docker-Container/samples/"]
+    depends_on:
+      - secure-container
