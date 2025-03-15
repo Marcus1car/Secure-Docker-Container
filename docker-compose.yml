@@ -27,7 +27,7 @@ services:
       - secure-container
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
-      - ./logs:/app/Secure-Docker-Container/logs
+      - ./logs:/app/Secure-Docker-Container/logs:rw
       - ./yara-rules:/app/yara-rules
       - ./config/whitelist.json:/app/Secure-Docker-Container/config/whitelist.json
     user: "10001"
@@ -41,7 +41,7 @@ services:
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
       - ./config:/app/Secure-Docker-Container/config 
-      - ./logs:/app/Secure-Docker-Container/logs
+      - ./logs:/app/Secure-Docker-Container/logs:rw
       - ./yara-rules:/app/yara-rules
 
     user: "10001"

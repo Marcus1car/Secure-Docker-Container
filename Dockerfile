@@ -34,16 +34,17 @@ RUN groupadd -g 10001 fileanalyst && \
     chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container /app/yara-rules && \ 
     chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container/logs
 
-# Copy application files with correct ownership
-COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
-COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules
-COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Container/config/
 
 # Set directory permissions
 RUN chmod 755 /app /app/Secure-Docker-Container && \
     chmod 755 /app/Secure-Docker-Container/scripts && \
     chmod 750 *.py && \
     chmod 775 /app/Secure-Docker-Container/logs
+
+# Copy application files with correct ownership
+COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
+COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules
+COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Container/config/
 
 
 # Install Python dependencies
