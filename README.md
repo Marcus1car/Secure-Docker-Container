@@ -48,7 +48,7 @@ A secure, isolated environment for analyzing and executing potentially malicious
 **Execution Limits**      
 Edit `config/execution_limits.json` to adjust resource constraints.
 By default :
-```
+```json
 {
   "memory_limit": 67108864,    // 64MB
   "cpu_time_limit": 30,        // CPU seconds
@@ -59,7 +59,7 @@ By default :
 ```
 
 Run with custom limits config : 
-```
+```bash
 docker-compose run --rm execute \
   -v ./custom_config:/app/Secure-Docker-Container/config \
   python3 execute.py samples/script.sh
@@ -67,7 +67,7 @@ docker-compose run --rm execute \
 
 **File Whitelisting**     
 Edit `config/whitelist.json` to define allowed file types.
-```
+```json
 {
   "allowed_mime_types": [
     "text/plain",
@@ -77,22 +77,25 @@ Edit `config/whitelist.json` to define allowed file types.
 }
 ```
 Run with custom whitelist : 
-```
+```bash
 docker-compose run --rm analyze \
   -v ./custom_whitelist.json:/app/Secure-Docker-Container/config/whitelist.json \
   python3 analyze.py samples/document.pdf
 ```
 **YARA Rules**      
 Edit the YARA rules in `yara-rules/` or mount custom rules:
-```
+```bash
 docker-compose run --rm analyze \
   -v ./custom_rules:/app/yara-rules \
   python3 analyze.py samples/malware.exe
 ```
 **Log Inspection**      
 View execution and analysis logs:    
-```
+```bash
 docker-compose run --rm analyze cat /app/Secure-Docker-Container/logs/execution.log
+```
+
+```bash
 docker-compose run --rm analyze cat /app/Secure-Docker-Container/logs/file_analysis.log
 ```
  
