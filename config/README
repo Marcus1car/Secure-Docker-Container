@@ -1,0 +1,4 @@
+## Execution Limits Configuration
+- `memory_limit`: Bytes (default 64MB)
+- `cpu_time_limit`: Seconds (optional)
+- `file_size_limit`: Bytes (default 10MB)

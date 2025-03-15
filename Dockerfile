@@ -9,50 +9,42 @@ RUN mkdir -p \
     /app/Secure-Docker-Container/logs \
     /app/Secure-Docker-Container/samples \
     /app/Secure-Docker-Container/scripts \
-    /var/run/clamav \
-    /var/log/clamav
+    /app/Secure-Docker-Container/config \
+    /app/yara-rules
 
 # Set workdir for subsequent commands
-WORKDIR /app/Secure-Docker-Container/scripts
+WORKDIR /app/Secure-Docker-Container 
+
+
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3-minimal \
     python3-pip \
     libmagic1 \
-    clamav \
-    clamav-daemon \
+    yara \
     gosu \
     netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure ClamAV
-RUN echo "LocalSocket /var/run/clamav/clamd.sock" >> /etc/clamav/clamd.conf && \
-    echo "User fileanalyst" >> /etc/clamav/clamd.conf && \
-    echo "LogFile /var/log/clamav/clamd.log" >> /etc/clamav/clamd.conf && \
-    echo "LogTime yes" >> /etc/clamav/clamd.conf && \
-    echo "MaxFileSize 100M" >> /etc/clamav/clamd.conf && \
-    echo "MaxScanSize 100M" >> /etc/clamav/clamd.conf && \
-    echo "StreamMaxLength 100M" >> /etc/clamav/clamd.conf
-
-RUN echo "Debug yes" >> /etc/clamav/clamd.conf && \
-    echo "Foreground yes" >> /etc/clamav/clamd.conf
-    
-# Copy application files FIRST
-COPY scripts/analyze.py scripts/execute.py .
-
 # Create non-root user and set ownership
 RUN groupadd -g 10001 fileanalyst && \
     useradd -u 10001 -g fileanalyst -s /bin/bash -m -d /home/fileanalyst fileanalyst && \
-    chown -R fileanalyst:fileanalyst \
-        /app/Secure-Docker-Container \
-        /var/run/clamav \
-        /var/log/clamav
+    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container /app/yara-rules && \ 
+    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container/logs
 
-# Set file permissions AFTER ownership change
-RUN chmod 750 *.py && \
-    chmod 770 /app/Secure-Docker-Container/logs
+# Copy application files with correct ownership
+COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
+COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules
+COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Container/config/
+
+# Set directory permissions
+RUN chmod 755 /app /app/Secure-Docker-Container && \
+    chmod 755 /app/Secure-Docker-Container/scripts && \
+    chmod 750 *.py && \
+    chmod 775 /app/Secure-Docker-Container/logs
+
 
 # Install Python dependencies
 COPY requirements.txt .
