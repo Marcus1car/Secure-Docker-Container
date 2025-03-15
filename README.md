@@ -16,6 +16,9 @@ A secure, isolated environment for analyzing and executing potentially malicious
 - **Whitelisting System**: MIME-type based file approval
 - **Comprehensive Logging**: Detailed execution and analysis records
 - **Security Hardened**: Non-root execution, kernel hardening
+- **Network Isolation** :     
+  - All executions run with `network_mode: none`    
+  - No inbound/outbound connections allowed
 
 ## Architecture 🏗 
 ```
