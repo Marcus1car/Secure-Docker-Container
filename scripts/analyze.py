@@ -57,8 +57,11 @@ class FileAnalyzer:
         Scan the file with YARA rules
         """
         if not self.yara_rules:
-            return {"error": "YARA rules not loaded"}
-            
+            return {
+            "error": "YARA rules not loaded",
+            "malicious": False,  # Add default
+            "matches": []         # Add default
+            }
         try:
             matches = self.yara_rules.match(file_path)
             return {
@@ -67,7 +70,11 @@ class FileAnalyzer:
             }
         except Exception as e:
             self.logger.error(f"YARA scan error: {e}")
-            return {"error": str(e)}
+            return {
+            "error": str(e),
+            "malicious": False,  # Add default
+             "matches": []         # Add default
+            }
 
     def analyze_file(self, file_path: str) -> Dict[str, Any]:
         """
@@ -100,8 +107,11 @@ class FileAnalyzer:
     def _assess_threat(self, result: dict) -> str:
         if result["whitelist_status"] == "blocked":
             return "high"
-        if result["yara_result"]["malicious"]:
+        
+        yara_result = result.get("yara_result", {})
+        if yara_result.get("malicious", False):
             return "medium"
+        
         return "low"
 
 
