@@ -39,7 +39,10 @@ A secure, isolated environment for analyzing and executing potentially malicious
 ## Quick Start 
 
 **1. Build your container**     
-`docker-compose build`     
+```
+sudo chown -R 10001:10001 logs
+sudo chmod -R 775 logs
+```    
 
 **2. Static  File Analysis**     
 `docker-compose run --rm analyze python3 analyze.py samples/suspicious_file`     
