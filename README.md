@@ -42,6 +42,7 @@ A secure, isolated environment for analyzing and executing potentially malicious
 ```
 sudo chown -R 10001:10001 logs
 sudo chmod -R 775 logs
+docker-compose build
 ```    
 
 **2. Static  File Analysis**     
