@@ -43,7 +43,7 @@ RUN chmod 755 /app /app/Secure-Docker-Container && \
 
 # Copy application files with correct ownership
 COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
-COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules
+COPY --chown=fileanalyst:fileanalyst yara-rules /app/yara-rules 
 COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Container/config/
 
 
