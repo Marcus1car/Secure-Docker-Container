@@ -40,6 +40,7 @@ A secure, isolated environment for analyzing and executing potentially malicious
 
 **1. Build your container**     
 ```
+mkdir -p logs 
 sudo chown -R 10001:10001 logs
 sudo chmod -R 775 logs
 docker-compose build
