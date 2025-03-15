@@ -25,6 +25,7 @@ A secure, isolated environment for analyzing and executing potentially malicious
 .
 ├── Dockerfile
 ├── docker-compose.yml
+├── entrypoint.sh
 ├── config/
 │ ├── execution_limits.json
 │ └── whitelist.json
