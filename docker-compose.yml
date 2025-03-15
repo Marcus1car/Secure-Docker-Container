@@ -11,9 +11,13 @@ services:
       - ./samples:/app/Secure-Docker-Container/samples
       - ./config:/app/Secure-Docker-Container/config
       - ./logs:/app/Secure-Docker-Container/logs:rw
-
+      - ./yara-rules:/app/yara-rules
     user: "10001"
     network_mode: "none"  # Disable network access by default
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   analyze:
     image: file-analyzer:latest
@@ -23,9 +27,11 @@ services:
       - secure-container
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
-      - ./logs:/app/Secure-Docker-Container/logs:rw
-      
-
+      - ./logs:/app/Secure-Docker-Container/logs
+      - ./yara-rules:/app/yara-rules
+      - ./config/whitelist.json:/app/Secure-Docker-Container/config/whitelist.json
+    user: "10001"
+    network_mode: "none"
   execute:
     image: file-analyzer:latest
     profiles: ["execute"]
@@ -35,4 +41,8 @@ services:
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
       - ./config:/app/Secure-Docker-Container/config 
-      - ./logs:/app/Secure-Docker-Container/logs:rw
+      - ./logs:/app/Secure-Docker-Container/logs
+      - ./yara-rules:/app/yara-rules
+
+    user: "10001"
+    network_mode: "none"

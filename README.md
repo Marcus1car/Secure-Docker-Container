@@ -33,7 +33,6 @@ A secure, isolated environment for analyzing and executing potentially malicious
 │ ├── analyze.py
 │ └── execute.py
 ├── yara-rules/
-│ └── custom_rules.yar
 └── samples/
 ```
 

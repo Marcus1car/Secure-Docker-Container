@@ -31,7 +31,8 @@ RUN apt-get update && apt-get install -y \
 # Create non-root user and set ownership
 RUN groupadd -g 10001 fileanalyst && \
     useradd -u 10001 -g fileanalyst -s /bin/bash -m -d /home/fileanalyst fileanalyst && \
-    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container /app/yara-rules
+    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container /app/yara-rules && \ 
+    chown -R fileanalyst:fileanalyst /app/Secure-Docker-Container/logs
 
 # Copy application files with correct ownership
 COPY --chown=fileanalyst:fileanalyst scripts/analyze.py scripts/execute.py .
@@ -42,7 +43,7 @@ COPY --chown=fileanalyst:fileanalyst config/whitelist.json /app/Secure-Docker-Co
 RUN chmod 755 /app /app/Secure-Docker-Container && \
     chmod 755 /app/Secure-Docker-Container/scripts && \
     chmod 750 *.py && \
-    chmod 770 /app/Secure-Docker-Container/logs
+    chmod 775 /app/Secure-Docker-Container/logs
 
 
 # Install Python dependencies
