@@ -3,5 +3,5 @@
     "cpu_time_limit": 3,
     "file_size_limit": 2097152,
     "process_limit": 10,
-    "max_execution_time": 10
+    "max_execution_time": 10 
   }
