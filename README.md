@@ -47,10 +47,14 @@ docker-compose build
 ```    
 
 **2. Static  File Analysis**     
-`docker-compose run --rm analyze python3 analyze.py samples/suspicious_file`     
+```bash
+docker-compose run --rm analyze python3 analyze.py samples/suspicious_file
+```
 
 **3. Execute a File Safely**      
-`docker-compose run --rm execute python3 execute.py samples/test_script.sh`
+```bash
+docker-compose run --rm execute python3 execute.py samples/test_script.sh
+```
 
 ## Configuration and Usage 🔧 
 **Execution Limits**      
