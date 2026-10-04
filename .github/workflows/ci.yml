@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is what the container image ships; 3.12 catches drift on newer Pythons.
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install libmagic (needed by python-magic)
+        run: sudo apt-get update -q && sudo apt-get install -y -q libmagic1
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run the test suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}/scripts
+        run: python -m pytest tests/ -v -p no:cacheprovider
+
+  docker:
+    name: Docker image, container tests, entry points
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # A failing build here is exactly the bug that went unnoticed for months:
+      # a multi-source COPY without a trailing slash meant no image could be built.
+      - name: Build the production image
+        run: docker compose build secure-container
+
+      - name: Build the test image
+        run: docker compose --profile test build test
+
+      - name: Run the test suite inside the container (uid 10001, no network)
+        run: docker compose --profile test run --rm -T test
+
+      - name: Prepare logs/ for the sandbox user (README Quick Start step)
+        run: |
+          mkdir -p logs
+          sudo chown -R 10001:10001 logs
+          sudo chmod -R 775 logs
+
+      - name: Smoke-test the documented entry points
+        run: ./tests/smoke_entrypoints.sh

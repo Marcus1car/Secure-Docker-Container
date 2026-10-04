@@ -1,5 +1,7 @@
 # Secure Docker Container for File Analysis & Execution  
 
+[![CI](https://github.com/Marcus1car/Secure-Docker-Container/actions/workflows/ci.yml/badge.svg)](https://github.com/Marcus1car/Secure-Docker-Container/actions/workflows/ci.yml)
+
 
 
 

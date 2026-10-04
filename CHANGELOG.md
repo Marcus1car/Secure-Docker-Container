@@ -3,7 +3,26 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] — 2026-10-04
+## [Unreleased]
+
+### Added
+
+- `.github/workflows/ci.yml` — continuous integration on every push and pull request:
+  the test suite on Python 3.10 and 3.12, the production and test image builds, the test
+  suite inside the container, and the smoke test of the documented entry points.
+- A CI status badge at the top of the README.
+
+### Fixed
+
+- **A config file that omitted `cpu_time_limit` silently removed the CPU limit.** The
+  missing key became `None`, and the limit was then skipped entirely. Missing keys now fall
+  back to the defaults.
+- **The default file-size limit disagreed with itself:** 1 MB in `SafeExecutor`, 10 MB in
+  `load_config`. Both now use the same `DEFAULT_CONFIG` (10 MB).
+- `tests/smoke_entrypoints.sh` no longer lets `docker compose run` consume its caller's
+  standard input.
+
+## 2026-10-04 — Repair and test suite
 
 The project could not build its Docker image, and its YARA scanning had silently stopped
 working in March 2025. This release fixes both, repairs how threats and resource limits are
@@ -113,15 +132,16 @@ Behaviour that changed — check whether anything depends on it:
 
 Not fixed in this release:
 
-- **Deleting `cpu_time_limit` from the config silently removes the CPU limit.** The most urgent
-  item, and a one-line fix.
+- ~~Deleting `cpu_time_limit` from the config silently removes the CPU limit.~~ Fixed — see
+  Unreleased.
 - No memory-violation label exists: memory exhaustion surfaces as an ordinary exit.
 - The `analyze` and `execute` containers have no `cap_drop` or `no-new-privileges`.
 - Sandboxed code runs as the same user as the supervisor, so it can overwrite its own config
   and logs.
 - The process limit is counted per user, not per sandbox.
 - The whitelist doesn't block anything; `execute.py` never reads it.
-- The default file-size limit is 1 MB in one place and 10 MB in another.
+- ~~The default file-size limit is 1 MB in one place and 10 MB in another.~~ Fixed — see
+  Unreleased.
 - On a fresh clone, `logs/` is created owned by root and the sandbox can't write to it. The
   smoke test detects this and prints the fix.
 - If the whitelist file fails to load, nothing reports it, and every file is treated as not
