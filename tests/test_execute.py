@@ -169,3 +169,27 @@ def test_valid_config_is_used(tmp_path):
     good = tmp_path / "good.json"
     good.write_text('{"memory_limit": 123, "max_execution_time": 7}')
     assert load_config(str(good)) == {"memory_limit": 123, "max_execution_time": 7}
+
+
+def _executor_from_partial_config(tmp_path):
+    """A config file that sets one limit and omits the others."""
+    cfg = tmp_path / "partial.json"
+    cfg.write_text('{"memory_limit": 134217728}')
+    return SafeExecutor(log_dir=str(tmp_path / "logs"), config_path=str(cfg))
+
+
+def test_partial_config_keeps_the_cpu_limit(tmp_path):
+    """Omitting cpu_time_limit used to leave it None, which silently skipped RLIMIT_CPU."""
+    executor = _executor_from_partial_config(tmp_path)
+    assert executor.cpu_time_limit == DEFAULTS["cpu_time_limit"]
+
+
+def test_partial_config_uses_the_same_file_size_default(tmp_path):
+    """The fallback file-size limit was 1 MB here but 10 MB in load_config."""
+    executor = _executor_from_partial_config(tmp_path)
+    assert executor.file_size_limit == DEFAULTS["file_size_limit"]
+
+
+def test_partial_config_keeps_the_values_it_does_set(tmp_path):
+    executor = _executor_from_partial_config(tmp_path)
+    assert executor.memory_limit == 134217728

@@ -9,6 +9,18 @@ import signal
 from typing import List, Optional , Any , Dict
 
 
+# Single source of truth for the limits. load_config falls back to it, and
+# SafeExecutor merges every config under it, so a key missing from a partial
+# config file can never leave a limit unset.
+DEFAULT_CONFIG = {
+    "memory_limit": 64 * 1024 * 1024,       # 64MB
+    "cpu_time_limit": 30,                   # 30 seconds CPU time
+    "file_size_limit": 10 * 1024 * 1024,    # 10MB file size limit
+    "process_limit": 5,                     # Max 5 processes
+    "max_execution_time": 5                 # 5 seconds wall time
+}
+
+
 def load_config(config_path='/app/Secure-Docker-Container/config/execution_limits.json') -> Dict[str, Any]:
     """
     Load resource limits from a configuration file.
@@ -28,14 +40,8 @@ def load_config(config_path='/app/Secure-Docker-Container/config/execution_limit
     except (FileNotFoundError, json.JSONDecodeError, PermissionError,
             ValueError, TypeError, AttributeError) as e:
         print(f"Warning: Could not load config from {config_path}: {str(e)}")
-        # Default config
-        return {
-            "memory_limit": 64 * 1024 * 1024,       # 64MB
-            "cpu_time_limit": 30,                   # 30 seconds CPU time
-            "file_size_limit": 10 * 1024 * 1024,    # 10MB file size limit
-            "process_limit": 5,                     # Max 5 processes
-            "max_execution_time": 5                 # 5 seconds wall time
-        }
+        # A copy: callers update the returned dict.
+        return dict(DEFAULT_CONFIG)
 
 
 class SafeExecutor:
@@ -52,16 +58,18 @@ class SafeExecutor:
             override_params: Parameters that override config file values
         """
         
-        self.config = load_config(config_path)
-        self.config.update(override_params)
-        
+        # Defaults first, then the config file, then explicit overrides. A partial
+        # config used to leave cpu_time_limit as None, which silently skipped
+        # RLIMIT_CPU, and fell back to a 1 MB file-size limit instead of 10 MB.
+        self.config = {**DEFAULT_CONFIG, **load_config(config_path), **override_params}
+
         # Extract configuration values
         self.log_dir = os.path.abspath(log_dir)
-        self.max_execution_time = self.config.get("max_execution_time", 5)
-        self.memory_limit = self.config.get("memory_limit", 64 * 1024 * 1024)
-        self.cpu_time_limit = self.config.get("cpu_time_limit")
-        self.file_size_limit = self.config.get("file_size_limit", 1024 * 1024)
-        self.process_limit = self.config.get("process_limit", 5)
+        self.max_execution_time = self.config["max_execution_time"]
+        self.memory_limit = self.config["memory_limit"]
+        self.cpu_time_limit = self.config["cpu_time_limit"]
+        self.file_size_limit = self.config["file_size_limit"]
+        self.process_limit = self.config["process_limit"]
         
        # Setup logging directory
         os.makedirs(self.log_dir, exist_ok=True)

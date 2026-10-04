@@ -48,7 +48,9 @@ logs_precheck() {
 check() {
   local label="$1"; shift
   local out
-  if out=$("$@" 2>&1) && echo "$out" | grep -q '"threat_level"\|"exit_code"'; then
+  # </dev/null: `docker compose run` reads stdin and would swallow the rest of a
+  # piped or heredoc-fed caller.
+  if out=$("$@" 2>&1 </dev/null) && echo "$out" | grep -q '"threat_level"\|"exit_code"'; then
     echo "PASS  $label"
   else
     echo "FAIL  $label"
