@@ -22,9 +22,7 @@ services:
   analyze:
     image: file-analyzer:latest
     profiles: ["analyze"]
-    command: ["python3", "analyze.py", "/app/Secure-Docker-Container/samples/"]
-    depends_on:
-      - secure-container
+    command: ["python3", "analyze.py", "/app/Secure-Docker-Container/samples/dummy.pe"]
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
       - ./logs:/app/Secure-Docker-Container/logs
@@ -35,9 +33,7 @@ services:
   execute:
     image: file-analyzer:latest
     profiles: ["execute"]
-    command: ["python3", "execute.py", "/app/Secure-Docker-Container/samples/"]
-    depends_on:
-      - secure-container
+    command: ["python3", "execute.py", "/app/Secure-Docker-Container/samples/safe_script.sh"]
     volumes:
       - ./samples:/app/Secure-Docker-Container/samples
       - ./config:/app/Secure-Docker-Container/config 
@@ -45,4 +41,18 @@ services:
       - ./yara-rules:/app/yara-rules
 
     user: "10001"
+    network_mode: "none"
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: file-analyzer-test:latest
+    profiles: ["test"]
+    volumes:
+      - .:/work
+    working_dir: /work
+    environment:
+      PYTHONPATH: /work/scripts
+      PYTHONDONTWRITEBYTECODE: "1"
     network_mode: "none"

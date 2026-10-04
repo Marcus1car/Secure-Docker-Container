@@ -17,14 +17,18 @@ def load_config(config_path='/app/Secure-Docker-Container/config/execution_limit
     try:
         with open(config_path, 'r') as f:
             config = json.load(f)
-            if not all(isinstance(v, int) for v in config.values()):
+            # bool is a subclass of int, so it must be excluded explicitly.
+            if not all(
+                isinstance(v, int) and not isinstance(v, bool)
+                for v in config.values()
+            ):
                 raise ValueError("Config values must be integers")
             return config
-    
-    except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
-        # Log error if needed
+
+    except (FileNotFoundError, json.JSONDecodeError, PermissionError,
+            ValueError, TypeError, AttributeError) as e:
         print(f"Warning: Could not load config from {config_path}: {str(e)}")
-        # Defaut Config
+        # Default config
         return {
             "memory_limit": 64 * 1024 * 1024,       # 64MB
             "cpu_time_limit": 30,                   # 30 seconds CPU time
@@ -62,44 +66,84 @@ class SafeExecutor:
        # Setup logging directory
         os.makedirs(self.log_dir, exist_ok=True)
         # Configure logging
-        self.logger = logging.getLogger('SafeExecutor')
-        self._setup_logging()
+        self.logger = self._setup_logging()
         self.logger.info(f"SafeExecutor initialized with config: {json.dumps(self.config, indent=2)}")
 
-    def _setup_logging(self):
-        """Configure logging with file rotation"""
-        log_file = os.path.join(self.log_dir, 'execution.log')
-        file_handler = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
-        self.logger.setLevel(logging.INFO)
-        
-    
+    def _setup_logging(self) -> logging.Logger:
+        """Per-instance logger.
+
+        Mirrors analyze.py's FileAnalyzer._setup_logging. A single global
+        `logging.getLogger('SafeExecutor')` with an unconditional addHandler
+        means a second instance in the same process (e.g. a future policy
+        gate that runs a FileAnalyzer and a SafeExecutor together) adds a
+        second handler to the *same* logger object, so both instances' lines
+        land in whichever log file the handler-list happens to put first.
+        Keying the logger name by log_dir and guarding addHandler gives each
+        instance (and each distinct log_dir) its own logger and its own file.
+        """
+        logger = logging.getLogger("SafeExecutor.%s" % self.log_dir)
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+        if not logger.handlers:
+            log_file = os.path.join(self.log_dir, 'execution.log')
+            file_handler = logging.FileHandler(log_file)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        return logger
+
+
     def _set_resource_limits(self):
         """Set resource limits for executed process based on configuration"""
         # Memory limit (RLIMIT_AS = address space limit)
         resource.setrlimit(resource.RLIMIT_AS, (self.memory_limit, self.memory_limit))
         # CPU time limit (seconds)
         if self.cpu_time_limit:
-            resource.setrlimit(resource.RLIMIT_CPU, (self.cpu_time_limit, self.cpu_time_limit))
+            # Soft != hard deliberately. The kernel
+            # sends SIGXCPU at the soft limit and SIGKILL at the hard limit;
+            # with soft == hard both fire in the same instant and SIGKILL wins
+            # the race, so every CPU-limit kill was reported as "Killed
+            # (possible OOM)" instead of "CPU Limit" (the limit was enforced,
+            # but reported as a memory problem). Splitting them gives the process a
+            # window to receive SIGXCPU and die from that signal instead. The
+            # cost: a process that catches/ignores SIGXCPU gets up to one
+            # extra second of CPU time before the hard limit kills it. That is
+            # accepted on purpose — max_execution_time (wall clock) remains
+            # the real backstop, and a correctly-labelled violation is worth
+            # one second of slack.
+            resource.setrlimit(
+                resource.RLIMIT_CPU,
+                (self.cpu_time_limit, self.cpu_time_limit + 1),
+            )
         # File size limit
         resource.setrlimit(resource.RLIMIT_FSIZE, (self.file_size_limit, self.file_size_limit))
         # Process limit
         resource.setrlimit(resource.RLIMIT_NPROC, (self.process_limit, self.process_limit))
         
-    def _check_resource_violation(self, process) -> str :
+    def _check_resource_violation(self, process, timed_out: bool = False) -> str:
+        """Classify why a process ended.
+
+        subprocess already decodes wait status: a negative returncode means
+        "killed by signal -returncode", and any value >= 0 is an ordinary exit.
+        Passing a plain exit code to os.WTERMSIG reinterprets it as a signal
+        number: exit 9 read as SIGKILL, exit 24 as SIGXCPU.
+        """
+        if timed_out:
+            # We sent the SIGKILL ourselves; it is not evidence of a limit.
+            return "Timeout"
+
+        returncode = process.returncode
+        if returncode is None or returncode >= 0:
+            return "No violation"
+
+        sig = -returncode
         sig_map = {
             signal.SIGXCPU: "CPU Limit",
-            signal.SIGKILL: "Memory Limit",
+            signal.SIGXFSZ: "File Size Limit",
             signal.SIGSEGV: "Memory Corruption",
-            signal.SIGXFSZ: "File Size Limit"
+            signal.SIGKILL: "Killed (possible OOM)",
         }
-        if process.returncode < 0:
-           sig = -process.returncode
-        else:
-           sig = os.WTERMSIG(process.returncode)
-        return sig_map.get(sig, "No violation")
+        return sig_map.get(sig, f"Killed by signal {sig}")
     
     def execute_file(self, file_path: str, args: Optional[List[str]] = None) -> dict:
         """Safely execute a file with strict controls"""
@@ -131,27 +175,35 @@ class SafeExecutor:
             )
 
             start_time = time.time()
-            timed_out = False 
+            timed_out = False
             try:
                 self.logger.info(f"Process started with PID: {process.pid}")
-                stdout, stderr = process.communicate(timeout=self.max_execution_time)
+                stdout, stderr = process.communicate(
+                    timeout=self.max_execution_time
+                )
             except subprocess.TimeoutExpired:
-                self.logger.warning(f"Process {process.pid} timed out, sending SIGKILL")
+                # This flag used to be set only in the nested handler,
+                # so the common case reported timed_out=False.
+                timed_out = True
+                self.logger.warning(
+                    f"Process {process.pid} timed out, sending SIGKILL"
+                )
                 os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-                try: 
-                    stdout , stderr = process.communicate(timeout=1)
+                try:
+                    stdout, stderr = process.communicate(timeout=1)
                 except subprocess.TimeoutExpired:
                     os.killpg(os.getpgid(process.pid), signal.SIGKILL)
                     stdout, stderr = process.communicate()
-                    timed_out = True
-            
+
             result = {
                 "exit_code": process.returncode,
                 "stdout": stdout.strip(),
                 "stderr": stderr.strip(),
                 "execution_time": time.time() - start_time,
-                "timed_out" : timed_out,
-                "resource_violation" : self._check_resource_violation(process) 
+                "timed_out": timed_out,
+                "resource_violation": self._check_resource_violation(
+                    process, timed_out
+                ),
             }
             self.logger.info(f"Execution result: {json.dumps(result)}")
             return result

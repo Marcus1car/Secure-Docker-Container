@@ -1,0 +1,16 @@
+# Test-only image. Layers pytest on top of the production image so the
+# production image never ships a test runner.
+FROM file-analyzer:latest
+
+USER root
+COPY requirements-dev.txt /tmp/requirements-dev.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements-dev.txt
+USER fileanalyst
+
+WORKDIR /work
+# The production image sets ENTRYPOINT ["/entrypoint.sh"]; clear it so pytest
+# is invoked directly.
+ENTRYPOINT []
+# -p no:cacheprovider keeps pytest from writing .pytest_cache into the
+# bind-mounted repo, which uid 10001 cannot write to.
+CMD ["python3", "-m", "pytest", "tests/", "-v", "-p", "no:cacheprovider"]

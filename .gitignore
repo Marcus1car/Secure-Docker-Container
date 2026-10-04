@@ -1,0 +1,16 @@
+.vscode
+
+.claude
+.claude.json
+.mcp.json
+CLAUDE.md
+CLAUDE.local.md
+.superpowers/
+docs/superpowers/
+
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+logs/
